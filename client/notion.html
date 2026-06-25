@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Connector</title>
+</head>
+<body>
+    <div id="notionContainer">
+        <h1>Notion Integration</h1>
+        <p>This page is dedicated to the Notion integration of MicrOps. Here you can manage your Notion workspaces, databases, and pages directly from MicrOps.</p>
+
+        <h2>Connect to Notion</h2>
+        <form id="notionForm" onsubmit="connectNotion(event)">
+            <label for="notionToken">Notion API Token:</label><br>
+            <input type="text" id="notionToken" name="notionToken"><br><br>
+         
+            <label for="notionDatabaseId">Notion Database ID:</label><br>
+            <input type="text" id="notionDatabaseId" name="notionDatabaseId"><br><br>
+            
+            <input type="submit" value="Connect">  
+        </form>
+
+        <h2>Notion Data:</h2>
+        <div id="notionData">
+            <input id="searchDb" placeholder="Search databases">
+            <select id="dbSelect" size="5">
+            </select>   
+            <div id="displaydb"></div>0
+        </div>
+    </div>
+
+        <script defer src="notion.js"></script>
+</body>
+</html>
+

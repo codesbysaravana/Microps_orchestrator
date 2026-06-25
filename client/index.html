@@ -1,0 +1,214 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MircOps</title>
+    <link rel="stylesheet" href="style.css"> 
+
+</head>
+<body>
+
+    <div id="landingLogin" class="landingPage">   
+        <h1>MicrOps</h1>
+        <form id="loginForm">
+            <label for="username">Username/email:</label>
+            <input type="text" id="loginusername" name="username"><br><br>
+
+            <label for="password">Password:</label>
+            <input type="password" id="loginpassword" name="password"><br><br>
+
+            <button type="submit" value="Login">login</button>
+        </form>
+        <input type="button" onclick="showSignupPage(event)" value="Sign Up">
+    </div>
+
+    <div id="landingSignUp" class="landingPage hidden">   
+        <h1>MicrOps</h1>
+        <form id="signupForm">
+            <label for="signupname">Name:</label>
+            <input type="text" id="signupname" name="name"><br><br>
+
+            <label for="signupemail">Email:</label>
+            <input type="text" id="signupemail" name="email"><br><br>
+
+            <label for="signuppassword">Password:</label>
+            <input type="password" id="signuppassword" name="password"><br><br>
+
+            <button type="submit" value="signup">SignUp</button>
+        </form>
+        <input type="button" onclick="showLoginPage(event)" value="Login">
+    </div>
+
+    <br><br>
+    <div class="buildContainer hidden">
+        <form id="buildJenkinsForm">  
+            <label for="repoUrl">Repo URL:</label>
+            <input type="text" id="repoUrl" name="repoUrl"><br><br>
+
+            <label for="branch">Branch:</label>
+            <input type="text" id="branch" name="branch"><br><br>
+
+            <label for="buildCommand">Build Command:</label>
+            <input type="text" id="buildCommand" name="buildCommand"><br><br>
+
+            <label for="projectName">Project Name:</label>
+            <input type="text" id="projectName" name="projectName"><br><br>
+
+            <input type="submit" value="Submit">
+        </form>
+
+        <label for="chatInput">Chat Input:</label><br>
+        <input type="text" id="chatInput" name="chatInput"><br><br>
+        <button onclick="sendModel(event)">Send Chat</button><br><br> 
+
+        <label for="chat">Chat Output:</label><br>
+        <textarea id="output" rows="10" cols="50">  
+
+        </textarea>
+    </div>
+
+    <script defer src="main.js"></script>  
+</body>
+</html>
+ -->
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicrOps Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <div class="ambient-grid"></div>
+
+<div id="landing" class="landing-hero fade-in-up">
+        <div class="hero-badge">MicrOps Platform v2.0</div>
+        <h1 class="hero-title">Automate your micro-operations at scale.</h1>
+        <p class="hero-subtitle">The enterprise-grade SaaS for seamless pipeline configuration, intelligent node management, and streamlined operational queries.</p>
+        <div class="hero-actions">
+            <button class="btn-primary hero-btn" onclick="showSignupPage(event)">Start Building</button>
+            <button class="btn-secondary hero-btn" onclick="showLoginPage(event)">Access Console</button>
+        </div>
+    </div>
+
+    <div id="landingLogin" class="landingPage hidden container-card fade-in-up">   
+        <div class="brand-header">
+            <div class="status-indicator"></div>
+            <h1>MicrOps</h1>
+            <p class="subtitle">Platform Authentication</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="loginusername">Username or Email</label>
+                <input type="text" id="loginusername" name="username" placeholder="admin@domain.com"><br><br>
+            </div>
+
+            <div class="input-group">
+                <label for="loginpassword">Password</label>
+                <input type="password" id="loginpassword" name="password" placeholder="••••••••"><br><br>
+            </div>
+
+            <button type="submit" value="Login" class="btn-primary">Authenticate</button>
+        </form>
+        
+        <div class="auth-toggle">
+            <span>New operator?</span>
+            <input type="button" class="btn-text" onclick="showSignupPage(event)" value="Request Access">
+        </div>
+    </div>
+
+    <div id="landingSignUp" class="landingPage container-card hidden fade-in-up">   
+        <div class="brand-header">
+            <div class="status-indicator"></div>
+            <h1>MicrOps</h1>
+            <p class="subtitle">Provision Account</p>
+        </div>
+
+        <form id="signupForm">
+            <div class="input-group">
+                <label for="signupname">Full Name</label>
+                <input type="text" id="signupname" name="name" placeholder="John Doe"><br><br>
+            </div>
+
+            <div class="input-group">
+                <label for="signupemail">Email Address</label>
+                <input type="text" id="signupemail" name="email" placeholder="john@domain.com"><br><br>
+            </div>
+
+            <div class="input-group">
+                <label for="signuppassword">Password</label>
+                <input type="password" id="signuppassword" name="password" placeholder="••••••••"><br><br>
+            </div>
+
+            <button type="submit" value="signup" class="btn-primary">Provision User</button>
+        </form>
+        
+        <div class="auth-toggle">
+            <span>Existing operator?</span>
+            <input type="button" class="btn-text" onclick="showLoginPage(event)" value="Return to Login">
+        </div>
+    </div>
+
+    <div class="buildContainer container-card hidden fade-in-up">
+        <div class="dashboard-header">
+            <h2>Pipeline Configuration</h2>
+            <div class="status-badge">Node Ops Active</div>
+        </div>
+
+        <form id="buildJenkinsForm" class="dashboard-section">  
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="repoUrl">Repository URL</label>
+                    <input type="text" id="repoUrl" name="repoUrl" placeholder="https://github.com/org/repo.git"><br><br>
+                </div>
+
+                <div class="input-group">
+                    <label for="branch">Target Branch</label>
+                    <input type="text" id="branch" name="branch" placeholder="main"><br><br>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="projectName">Project Identifier</label>
+                    <input type="text" id="projectName" name="projectName" placeholder="microps-core"><br><br>
+                </div>
+
+                <div class="input-group">
+                    <label for="buildCommand">Build Command</label>
+                    <input type="text" id="buildCommand" name="buildCommand" placeholder="npm run build"><br><br>
+                </div>
+            </div>
+
+            <input type="submit" class="btn-primary" value="Initialize Build Pipeline">
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="dashboard-section console-section">
+            <div class="console-header">
+                <label for="chatInput">Command Input</label>
+            </div>
+            <div class="console-input-row">
+                <input type="text" id="chatInput" name="chatInput" placeholder="> Enter operational query...">
+                <button class="btn-secondary" onclick="sendModel(event)">Execute</button>
+            </div>
+            
+            <div class="console-output-wrapper">
+                <label for="output" class="sr-only">System Output Log</label>
+                <textarea id="output" rows="10" cols="50" readonly placeholder="Awaiting system response..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="main.js"></script>  
+</body>
+</html>

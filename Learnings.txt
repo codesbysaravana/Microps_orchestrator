@@ -1,0 +1,129 @@
+
+buffer does auth base  64 
+jenkins needs pass, username
+Jenkins needs crumbs for csrf
+jenkins needs sessions cookie with csrf
+Jenkins XML order is wrong
+JEnkins xml changed
+
+
+for Notion
+1. Install SDK
+npm install @notionhq/client
+2. Store Secret
+.env
+3. Create Client
+require("dotenv").config();
+const { Client } = require("@notionhq/client");
+const notion = new Client({
+    auth: process.env.NOTION_TOKEN,
+});
+5. Find Database ID
+This is the next thing you'll need.
+Open your database.
+However, let's verify properly using the API.
+
+6. Discover Databases
+async function getDatabases() 
+
+7. Read Database Schema
+const databaseId = "YOUR_DATABASE_ID";
+async function inspect() 
+
+8. Insert a Task
+Once we know the schema:
+
+
+
+
+//FOR every node appplication you must setHeader of cors 3 specifically
+// and must handle PreFlight OPTIONS request 
+
+//Need to call dotenv from where the path actually is  to the file calling it
+
+
+
+
+pipeline_status
+
+NOT_STARTED
+PIPELINE_CREATED
+BUILDING
+SUCCESS
+FAILED
+DEPLOYED
+
+
+//IF something takes long, async it offload it and continue with other process
+
+// JWT is 2 phases 
+1. Issuing JWT --> user, userid, password all needed to get and check from db and then create a token
+2. Authorizing with JWT token alone (authorize.js) --> user details not needed only jwt token
+
+
+A STANDARD JWT PAYLOAD INSIDE 
+{
+  userId: user.id, //id fetch from db    
+  email: user.email,
+  role: "USER",
+}, {JWT_SECRET}
+
+DO NOT EVER STORE password inside jwt and always fetch from db and then store that id and that email if they are correct to the user
+
+
+
+
+
+I'd separate them like this:
+POST /projects
+
+Creates project.
+
+POST /projects/:id/install
+
+Triggers Jenkins:
+npm install
+POST /projects/:id/build
+
+Triggers Jenkins:
+npm run build
+POST /projects/:id/package
+
+Creates Docker image.
+
+
+1. in this new method one single jenkins job must be present to run 10 different users
+
+1. jenkins crumb, cookie fields
+2. jenkins create a freestyle project job
+3. enable concurrent builds for differnt users parellely
+4. put iniside a (TENANT_SCRIPT) for each single user in parameterized project
+5. add execute shell in build steps  # Save the incoming Node script to a file, then execute it. 
+# This prevents multiline string formatting errors in Jenkins.
+echo "$TENANT_SCRIPT" > execute_tenant.sh
+bash execute_tenant.sh
+
+
+1. i crteaed a central ecr hub to put all images there
+2. i created a iam role for ec2 to communicate with all other aws servies (mainly ecr)
+3. attached the role to EC2 instance
+4. then ssh into the EC2 machine, input test creds from this (aws sts get-caller-identity) and login properly too
+5. then from this login successful
+6. aws ecr describe-repositories --> lists the available repos ecr
+
+
+1. migrating redis from docker to ec2
+
+
+
+1. alls working now to deployment installing aws sdk in node
+### How this architecture works seamlessly:
+1. **The Build:** Jenkins finishes the build and pushes `poopdi:build-123` to ECR.
+2. **The Blueprint:** `EcsDeployService.js` creates a new "Task Definition" (a JSON blueprint) in AWS saying: *"Hey AWS, the latest version of User 11's app is located at ECR URI `...poopdi:build-123`"*.
+3. **The Rollout:** The script tells the user's existing AWS ECS Service to update. AWS Fargate will automatically provision a micro-VM, pull the image from ECR, start the Next.js app on port 3000, and once it's healthy, shut down the old version.
+
+### The Missing AWS Prerequisite (For your next tests):
+For this specific Node script to succeed, you have to create a few things in the AWS Console *once* before your first user deploys:
+1. **ECS Cluster:** Create a blank AWS ECS Cluster named `microps-tenant-cluster` (Fargate mode).
+2. **Execution Role:** An IAM Role that allows ECS to pull images from your ECR vault and write logs to CloudWatch.
+3. **The First Service:** For your upcoming tests, you'll need to manually create the first Service (`tenant-11-poopdi-service`) in that cluster so the script has something to update. Later, you can have Node.js use `CreateServiceCommand` to automate this for brand-new users.

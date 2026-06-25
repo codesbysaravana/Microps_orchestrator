@@ -1,0 +1,57 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+
+CREATE TABLE projects ( //EACH project 
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    repo_url TEXT NOT NULL,
+    branch VARCHAR(255) DEFAULT 'main',
+    language VARCHAR(100),
+    framework VARCHAR(100),
+    install_command TEXT,
+    build_command TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE pipelines ( //many pipelines to one project each row
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    provider VARCHAR(100) NOT NULL,
+    external_pipeline_id VARCHAR(255),
+    external_pipeline_name VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE
+);
+
+
+CREATE TABLE builds ( each row inside pipelnes
+    id SERIAL PRIMARY KEY,
+    pipeline_id INTEGER NOT NULL,
+    external_build_id VARCHAR(255),
+    build_number INTEGER,
+    status VARCHAR(50) DEFAULT 'QUEUED',
+    duration BIGINT,
+    build_url TEXT,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (pipeline_id)
+        REFERENCES pipelines(id)
+        ON DELETE CASCADE
+);
