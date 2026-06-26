@@ -1,0 +1,87 @@
+
+[ Laptop: Node.js ] 
+       │
+       ▼ (Sends XML via HTTP POST /createItem)
+[ EC2: Jenkins Controller ] 
+       │
+       ▼ (Saves XML into jobs/ folder as config.xml)
+[ EC2: Jenkins Run Loop ]
+       │
+       ├─► 1. Clones GitHub Repo into: /var/lib/jenkins/workspace/job-name
+       ├─► 2. Changes directory into that workspace folder
+       └─► 3. Executes the <command> block as the 'jenkins' Linux user
+                 │
+                 ▼
+           [ EC2: Buildah Binary ] 
+                 │
+                 └─► Compiles the Dockerfile into a local image container layer
+
+
+
+
+-------------------------------------------------------------------------------------
+A Proper structure for Project                                                        |
+-------------------------------------------------------------------------------------
+1. Dockerize (DockerFile)
+2. docker has 2 steps 1. build step (dependency install and run) and 2. run step (run the container)
+
+steps to build and run locally
+(do) ---> docker build -t microps-server . (build the image) 
+(do) ---> docker run -p 5000:5000 microps-server (run the container)
+
+3. log into the docker into ecr with aws id
+(do) ---> aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 688567265418.dkr.ecr.ap-southeast-2.amazonaws.com
+4. tag the docker image in ecr 
+(do) ---> docker tag microps-server:latest 688567265418.dkr.ecr.ap-southeast-2.amazonaws.com/microps-server:latest
+5. push the docker image to ecr 
+(do) ---> docker push 688567265418.dkr.ecr.ap-southeast-2.amazonaws.com/microps-server:latest
+
+// now aws ecr is live after these steps ---> 688567265418.dkr.ecr.ap-southeast-2.amazonaws.com/microps-server:latest
+
+
+now register from ECR to ECS
+-------------------------------------------------> register as the code from deployECS 
+aws ecs register-task-definition \
+  --family microps-orchestrator-backend \
+  --network-mode awsvpc \
+  --requires-compatibilities FARGATE \
+  --cpu "256" \
+  --memory "512" \
+  --execution-role-arn "arn:aws:iam::688567265418:role/microps-ecs-execution-role" \
+  --task-role-arn "arn:aws:iam::688567265418:role/microps-ecs-task-role" \
+  --container-definitions '[{
+    "name": "microps-server",
+    "image": "688567265418.dkr.ecr.ap-southeast-2.amazonaws.com/microps-server:latest",
+    "essential": true,
+    "portMappings": [{ "containerPort": 5000, "protocol": "tcp" }],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/microps-backend",
+        "awslogs-region": "ap-southeast-2",
+        "awslogs-stream-prefix": "server",
+        "awslogs-create-group": "true"
+      }
+    }
+  }]' \
+  --region ap-southeast-2
+---------------------------------------------------------------------------------------------------------
+
+
+now create service
+------------------------------------------------> code from deployECS 
+aws ecs create-service \
+  --cluster microps-cluster \
+  --task-definition microps-orchestrator-backend:2 \
+  --service-name microps-backend-service \
+  --desired-count 1 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-079183b54c5f0d987,subnet-08aaaf40dc42144e7],securityGroups=[sg-0f76f638085752012],assignPublicIp=ENABLED}" \
+  --load-balancer-target-groups-arns "arn:aws:elasticloadbalancing:ap-southeast-2:688567265418:targetgroup/microps-backend-tg/929657f97e073b71" \
+  --region ap-southeast-2
+
+----------------------------------------------------------------------------------------------------------
+
+steps 
+1. register a ecs service
+2. when create service give the vpc and subnet from 

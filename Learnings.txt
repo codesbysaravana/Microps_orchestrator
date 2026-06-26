@@ -115,7 +115,7 @@ bash execute_tenant.sh
 1. migrating redis from docker to ec2
 
 
-
+//AWSDEPLOYSERVICE  
 1. alls working now to deployment installing aws sdk in node
 ### How this architecture works seamlessly:
 1. **The Build:** Jenkins finishes the build and pushes `poopdi:build-123` to ECR.
@@ -127,3 +127,148 @@ For this specific Node script to succeed, you have to create a few things in the
 1. **ECS Cluster:** Create a blank AWS ECS Cluster named `microps-tenant-cluster` (Fargate mode).
 2. **Execution Role:** An IAM Role that allows ECS to pull images from your ECR vault and write logs to CloudWatch.
 3. **The First Service:** For your upcoming tests, you'll need to manually create the first Service (`tenant-11-poopdi-service`) in that cluster so the script has something to update. Later, you can have Node.js use `CreateServiceCommand` to automate this for brand-new users.
+
+
+1. obv init ecs client from aws sdk and create a object with it, construct the class with the new and use it by ecsClient.sned and send the info to deploy
+2. TWO steps, 1st step is of, (new revision of the task defintion send to ecs) and then (upload the ecs fargate with actual container and init cluster deploy)
+
+//first i need to create the first ecs deployment and it will be automated for next new users it seems
+//for ARN in env go to AWS IAM roles and search ecstaskdefinitions and copy that arn
+
+1. remeber like EC2 interaction with services, lets do the same with ECS too rmember ataaching IAM roles creating it 
+for it to interact wth other services
+
+
+HENCE 
+--> FINALLY EC2 iam role arn and ECS iam role
+How to get those 3 IDs fast for your .env:
+VPC Dashboard: Open the AWS Console and search for VPC.
+Subnets: Click Subnets on the left. You will see default subnets listed. Copy any two of the Subnet IDs (e.g., subnet-0a1b2c3d4e5f6g7h8).
+Add them to your .env as ECS_SUBNET_1=... and ECS_SUBNET_2=....
+Security Group: Click Security Groups on the left. Look for the one named default (or create a new one that allows port 3000 / HTTP inbound). Copy its ID (e.g., sg-0123456789abcdef0).
+Add it to your .env as ECS_SECURITY_GROUP=....
+
+
+
+??PROBLEMS NOW
+1. expired aws tokens 
+aws sts get-caller-identity
+
+
+MAKE SURE TO DO
+1. dynamic dockker file checking ad cretion
+2. seperaate ECS and ECR for tenants
+3. dynamic cloudwatch genration
+
+One VPC
+Two public subnets
+Internet Gateway
+Route tables
+One Application Load Balancer
+One shared ECS cluster
+One ECR repository
+Per-user ECS services and target groups
+
+
+                     MicrOps Platform                                                      what if 100 users 1 VPC ✅
+
+                    ┌─────────────────┐
+                    │   One VPC       │                                                 
+                    └─────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+   Public Subnet A     Public Subnet B     Internet Gateway
+        │                   │
+        └─────────────┬─────┘
+                      │
+             Application Load Balancer
+                      │
+      ┌───────────────┼────────────────┐
+      │               │                │
+  Target Group A  Target Group B  Target Group C
+      │               │                │
+ ECS Service A   ECS Service B   ECS Service C
+      │               │                │
+  Fargate Task    Fargate Task    Fargate Task
+
+
+  
+
+
+  what if 100 users --------------------------------------------------------------------------------------------------->
+                                                                                                              2 Public Subnets ✅
+
+                                                                                                            1 Internet Gateway ✅
+
+                                                                                                            1 ALB ✅
+
+                                                                                                            1 ECS Cluster ✅
+
+                                                                                                            1 ECR Repository ✅
+
+                                                                                                            100 ECS Services
+
+                                                                                                            100 Task Definitions
+
+                                                                                                            100 Running Tasks
+
+                                                                                                            100 Target Groups
+
+
+
+DONT READ ALL THIS:
+
+Right now, your ECS service spins up, but it is floating in the void. To route traffic from the internet -> ALB -> Target Group -> Fargate Task, your Node.js orchestrator needs to dynamically create Target Groups and ALB Listener Rules on the fly before it creates the ECS service.
+
+Here is the fully upgraded deployment engine. I have integrated the AWS ELBv2 SDK. For every new user, it will now automatically create a Target Group, map a unique subdomain (like tenant11-poopdi.microps.com) to an ALB Listener Rule, and attach it to the Fargate container.
+
+1. You will need to install the load balancer SDK first: npm install @aws-sdk/client-elastic-load-balancing-v2
+2. How to set up your AWS environment for this:
+
+The ALB: Manually create an Application Load Balancer in the AWS EC2 dashboard. Attach it to your public subnets and ensure its securiy group       allows inbound HTTP (Port 80) and HTTPS (Port 443).
+
+The Listener: On your ALB, add a Listener on Port 80 (and 443 later). Set the default action to return a fixed response (e.g., 404 Not Found - MicrOps).
+
+The Envs: Grab the VPC ID and the Listener ARN (from the listener you just made on the ALB) and put them in your .env alongside your subnets.
+
+Wildcard DNS (Crucial): Go to your domain registrar (e.g., Route53, Namecheap, Vercel) and create a Wildcard CNAME Record (*.microps.com) pointing to your ALB's DNS Name.
+
+
+
+shortin 
+1. create install @aws-sdk/client-elastic-load-balancing-v2 (for ELB)
+2. create env ALB_ARN
+3. public subnets, create a ALB in EC2 and attach 2 avail zones and subnets (also attach VPC)
+4. create a sq with (80 allowed and 443 allowed)
+5. attach to ALB
+6. return fixed resposne to target groups mainly 
+7. copy the arn from ALB
+
+Is Jenkins running Buildah rootless as the jenkins user,
+
+sudo su (jenkins-user) connected to the buildah in ec2 srver ubuntu and then,... buildah connected with ecr image ARN for uploading images 4
+
+
+SOYYYBOYYYYYYYY
+  1. got the problem with the ECS container target group bein the target group as the issue, REQUEST TIMED OUT ERROR
+  2. for 3000 port add sg from ec2 inbound rule as 3000
+
+Problems:
+  1. Browser cannot resolve currently with my current login http://tenant-3-saravanapriyancportfolio.microps.com/ --->  SO NO DOMAIN DNS
+    DNS cannot resolve cuz aint no (think in route53...)
+  2. ALB Listerner is HIGHLY importatnt see the target policy thats the entry point to the application so
+
+  //target groups error
+  ALB must match sg and in EC2 
+
+---------------------------------------
+  MAIN THING  (MAIN SECURITY GROUPS)  |
+  sg-031eac326fccbf101                |
+  microps-tenant-alb-securitygroups   |
+  -----------------------------------/
+
+  MAIN THINGS TO CHECK 
+  1. ECS (Taskk def sg)
+  2. ALB (Check security groups)
+  3. EC2 (check security groups)

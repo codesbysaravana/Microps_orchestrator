@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+README.md
+
+# NOTE: .env is currently NOT ignored so that it gets copied into the container for quick testing.
+# For production ECS deployment, uncomment the line below and inject secrets via ECS Task Definition environment variables or AWS Secrets Manager.
+# .env

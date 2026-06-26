@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-ecs": "^3.1075.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "^3.1075.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.79.1",

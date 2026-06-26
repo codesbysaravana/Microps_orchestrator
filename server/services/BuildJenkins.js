@@ -2,7 +2,7 @@ const { Queue, Worker } = require('bullmq');
 const Redis = require('ioredis');
 const { getCrumb } = require('../utils/getJenkinsCrumb');
 const { projectsDB } = require('../db/pg');
-const { deployservice } = require('./DeployService');
+const { deployServiceECS } = require('./DeployService');
 
 require('dotenv').config();
 
@@ -13,9 +13,9 @@ const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2';
 const ECR_REGISTRY_URL = process.env.ECR_REGISTRY_URL || '688567265418.dkr.ecr.ap-southeast-2.amazonaws.com';
 
 const redisConnection = new Redis({
-    host: '127.0.0.1',
+    host: "16.176.231.229",
     port: 6379,
-    maxRetriesPerRequest: null // Required by BullMQ
+    maxRetriesPerRequest: null,
 });
 
 // 2. Initialize the Job Queue
@@ -71,21 +71,46 @@ WORKSPACE_DIR="tenant-workspace-${uniqueJobId}"
 git clone --branch ${branch} ${repoUrl} $WORKSPACE_DIR
 cd $WORKSPACE_DIR
 
+echo "Workspace:"
+pwd
+ls -la
+
 echo "====== MicrOps Orchestrator: Executing User Build Commands ======"
 ${buildCommand}
 
-echo "====== MicrOps Orchestrator: Packaging Docker Image via Buildah ======"
-# Build using rootless buildah
-buildah bud --isolation=chroot -t microps-registry/${projectName}:${uniqueJobId} .
+echo "====== MicrOps Orchestrator: Building Docker Image ======"
 
-echo "====== MicrOps Orchestrator: Authenticating and Pushing to AWS ECR ======"
-# Fetch the temporary AWS ECR password and pipe it directly to Buildah login
-aws ecr get-login-password --region ${AWS_REGION} | buildah login --username AWS --password-stdin ${ECR_REGISTRY_URL}
+docker build --pull \
+-t microps-registry/${projectName}:${uniqueJobId} .
+
+echo "====== MicrOps Orchestrator: Logging into AWS ECR ======"
+
+aws ecr get-login-password --region ${AWS_REGION} \
+| docker login \
+--username AWS \
+--password-stdin ${ECR_REGISTRY_URL}
 
 # Push to the central ECR vault. We tag the image with the userId to maintain secure multi-tenant organization (also appending microps-hq here)
-buildah push microps-registry/${projectName}:${uniqueJobId} docker://${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${uniqueJobId}
+echo "====== MicrOps Orchestrator: Tagging Image ======"
+
+docker tag \
+microps-registry/${projectName}:${uniqueJobId} \
+${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${uniqueJobId}
+
+echo "====== MicrOps Orchestrator: Pushing Image ======"
+
+docker push \
+${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${uniqueJobId}
 
 echo "====== MicrOps Orchestrator: Cleaning Up Workspace ======"
+echo "====== MicrOps Orchestrator: Cleaning Docker ======"
+
+docker image rm \
+${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${uniqueJobId} || true
+
+docker image rm \
+microps-registry/${projectName}:${uniqueJobId} || true
+
 cd ..
 rm -rf $WORKSPACE_DIR
 echo "Build & Push completed successfully!"
@@ -125,7 +150,8 @@ const buildWorker = new Worker('tenant-builds', async (job) => {
             console.log(`[WORKER] ✅ Build successful for ${projectName}!`);
             
             // Trigger your local Docker tracking/deployment script here
-            await deployservice(jobId); 
+            const imageURI = `${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${jobId}`;
+            await deployServiceECS(userId, projectName, imageURI); 
             
             return finalStatus;
         } else {
@@ -215,3 +241,16 @@ async function pollBuild(buildUrl, crumb, cookie) {
 }
 
 module.exports = { jenkinsInit };
+
+
+
+
+
+/* 
+What imageURI becomes
+Suppose:
+
+userId = 42
+projectName = todo-api
+uniqueJobId = 8f3d12 
+*/

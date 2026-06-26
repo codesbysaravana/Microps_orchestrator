@@ -11,7 +11,6 @@ const PORT = 5000;
 const server = createServer((req, res) => {
 
     console.log(req.method, req.url);
-
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); //added after failed jwt sign
