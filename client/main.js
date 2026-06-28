@@ -1,35 +1,49 @@
 const SERVER = 'http://localhost:5000';
 
-//const landing = document.getElementById('landing');
-//landing.addEventListener('click', showDashboard);
+import { routes } from './router.js';
 
-const showSignupPage = () => {
-    document.getElementById('landing').classList.add('hidden');
-    const loginFormHide = document.getElementById('landingLogin');
-    loginFormHide.classList.add("hidden");
+const app = document.getElementById("app");
 
-    const landingSignUp = document.getElementById('landingSignUp');
-    landingSignUp.classList.remove("hidden");
+//navigate using history API
+function renderSPA(path) {
+    history.pushState({}, "", path);
+    const app = document.getElementById('app');
+    app.innerHTML = routes[path];
+    const pathnow = window.location.pathname;
+    console.log(pathnow);
+    //if i place the event listeners adding then theyll add on with every single click
 }
 
-const showLoginPage = () => {
-    document.getElementById('landing').classList.add('hidden');
-    const loginFormShow = document.getElementById('landingLogin');
-    loginFormShow.classList.remove("hidden");
+function attachEvents() {
+    // Handle browser back/forward buttons
+    window.addEventListener("popstate", () => {
+        app.innerHTML = routes[window.location.pathname];
+    });
 
-    const landingSignUp = document.getElementById('landingSignUp');
-    landingSignUp.classList.add("hidden");
+    //adding listeners once when page loads
+    app.addEventListener("click", (e) => {
+        if (e.target.dataset.route) {
+            renderSPA(e.target.dataset.route);
+        }
+        if (e.target.id === "chatButton") {
+            sendModel(e);
+        }
+    });
+
+    app.addEventListener("submit", (e) => {
+        if (e.target.id === "loginForm") {
+            login(e);
+        }
+        if (e.target.id === "signupForm") {
+            signup(e);
+        }
+        if (e.target.id === "buildJenkinsForm") {
+            buildRequest(e);
+        }
+    });
 }
 
-const hideAll = () => {
-    const landingSignUp = document.getElementById('landingSignUp');
-    landingSignUp.classList.add("hidden");
-
-    const loginFormHide = document.getElementById('landingLogin');
-    loginFormHide.classList.add("hidden");
-}
-
-const signupForm = document.getElementById('signupForm');
+attachEvents();
 
 async function signup(e) {
     e.preventDefault();
@@ -37,46 +51,41 @@ async function signup(e) {
     const name = document.getElementById('signupname').value;
     const email = document.getElementById('signupemail').value;
     const pwd = document.getElementById('signuppassword').value;
-    
-    if(!email && !pwd) {
+
+    if (!email && !pwd) {
         alert("Nothing given");
-    } else if(!email) {
+    } else if (!email) {
         alert("No email given");
-    } else if(!pwd) {
+    } else if (!pwd) {
         alert("No pwd given");
     } else {
         await signOnBoarding(name, email, pwd);
         console.log("Sent backend");
     }
-} 
+}
 
-signupForm.addEventListener("submit", signup);
-
-const loginForm = document.getElementById('loginForm');
 async function login(e) {
     e.preventDefault();
     //const name = document.getElementById('name').value;
     const email = document.getElementById('loginusername').value;
     const pwd = document.getElementById('loginpassword').value;
-    if(!email && !pwd) {
+    if (!email && !pwd) {
         alert("Nothing given");
-    } else if(!email) {
+    } else if (!email) {
         alert("No email given");
-    } else if(!pwd) {
+    } else if (!pwd) {
         alert("No pwd given");
     } else {
         await sendCredsBack(email, pwd);
-        console.log("Sent backend");
+        console.log("Sending backend");
     }
 }
 
-loginForm.addEventListener('submit', login);
-
 async function signOnBoarding(name, email, pwd) {
     console.log(name);
-    const data = await fetch('http://localhost:5000/signup', {
+    const data = await fetch(`${SERVER}/signup`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             name: name,
             email: email,
@@ -86,8 +95,8 @@ async function signOnBoarding(name, email, pwd) {
 
     console.log(data);
     const status = await data.json();
-    if(data.ok) {
-        showLoginPage();
+    if (data.ok) {
+        renderSPA("/login");
     } else {
         alert('Error signing in');
     }
@@ -95,56 +104,41 @@ async function signOnBoarding(name, email, pwd) {
 
 async function sendCredsBack(email, pwd) {
     console.log(email);
-    const data = await fetch('http://localhost:5000/login', {
+    const data = await fetch(`${SERVER}/login`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             username: email,
             password: pwd
         })
     });
     console.log(data);
-    if(!data.ok) {
+    if (!data.ok) {
         alert("Invalid");
     }
     else {
         const token = await data.text();
-    localStorage.setItem("jwt", token);
-    //const res = await data.json(); 
-    if(token) {
-        hideAll();
-        showDashboard();
+        localStorage.setItem("jwt", token);
+        //const res = await data.json(); 
+        if (token) {
+            alert('success');
+            renderSPA("/dashboard");
         }
     }
-} 
-
-function showDashboard() {
-    //e.preventDefault();
-    const divForBuild = document.querySelectorAll(".buildContainer");
-    //divForBuild.classList.remove('hidden');
-    divForBuild.forEach(div => {
-        div.classList.remove("hidden");
-    });
 }
 
-
-/* setTimeout(() => {
-    header.textContent = "MICROOOOPSSS";
-}, 3000); */
-
-const form = document.getElementById('buildJenkinsForm');
 const buildRequest = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("jwt");
     try {
-            const repoUrl = document.getElementById("repoUrl").value; //expects a string
-            const branch = document.getElementById("branch").value;
-            const buildCommand = document.getElementById("buildCommand").value;
-            const projectName = document.getElementById("projectName").value;
+        const repoUrl = document.getElementById("repoUrl").value; //expects a string
+        const branch = document.getElementById("branch").value;
+        const buildCommand = document.getElementById("buildCommand").value;
+        const projectName = document.getElementById("projectName").value;
 
         const data = JSON.stringify({ repoUrl, branch, buildCommand, projectName });
 
-        const response = await fetch('http://localhost:5000/build', {
+        const response = await fetch(`${SERVER}/build`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -159,8 +153,7 @@ const buildRequest = async (e) => {
     } catch (err) {
         console.log(err);
     }
-} 
-form.addEventListener('submit', (e) => buildRequest(e));
+}
 
 /* const userDetails = async () => {
     const request = JSON.stringify({userName, password});
@@ -180,10 +173,10 @@ const sendModel = async (e) => {
     e.preventDefault();
     const userPrompt = document.getElementById('chatInput').value;
     //const prompt = userPrompt.json(); strings dont have any .json() mehod
-    const response = await fetch('http://localhost:5000/chat', {
+    const response = await fetch(`${SERVER}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type' : 'application/json' },
-        body: JSON.stringify({prompt: userPrompt})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userPrompt })
     });
 
     const output = document.getElementById('output');
@@ -191,8 +184,6 @@ const sendModel = async (e) => {
 
     output.value = data; //textarea lived in value
 }
-//studentbuilders@amazon.com
 
-
-
-
+//need for initial load clearly
+renderSPA(window.location.pathname);

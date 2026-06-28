@@ -3,28 +3,28 @@ require('dotenv').config();
 const JENKINS_URL = process.env.JENKINS_URL;
 
 const getCrumb = async () => {
-    const auth = Buffer .from(`${process.env.JENKINS_API_USER}:${process.env.JENKINS_API_KEY}`).toString('base64');
+  const auth = Buffer.from(`${process.env.JENKINS_API_USER}:${process.env.JENKINS_API_KEY}`).toString('base64');
 
-    try {
-        const data = await fetch(`${JENKINS_URL}/crumbIssuer/api/json`, {
-            method: 'GET',
-            headers: {
-                'Content-type': 'application/json',
-                'Authorization': `Basic ${auth}`
-            }
-        });
-        console.log(data.headers.get('set-cookie'));
-        console.log(data);
-        const cookie = data.headers.get('set-cookie');
-        const crumb = await data.json();
-        ///console.log(crumb.headers.get('set-cookie')); error cuz json()
-        console.log(crumb);
-        return { crumb, cookie };
+  try {
+    const data = await fetch(`${JENKINS_URL}/crumbIssuer/api/json`, {
+      method: 'GET',
+      headers: {
+        'Content-type': 'application/json',
+        'Authorization': `Basic ${auth}`
+      }
+    });
+    console.log(data.headers.get('set-cookie'));
+    console.log(data);
+    const cookie = data.headers.get('set-cookie');
+    const crumb = await data.json();
+    ///console.log(crumb.headers.get('set-cookie')); error cuz json()
+    console.log(crumb);
+    return { crumb, cookie };
 
-    } catch (err) {
-        console.log(err);
-        console.log("error getting Crumb");
-    }
+  } catch (err) {
+    console.log(err);
+    console.log("error getting Crumb");
+  }
 }
 
 module.exports = { getCrumb };

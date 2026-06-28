@@ -8,7 +8,7 @@ async function connectNotion(event) {
     const sendToServer = JSON.stringify({notionToken, notionDB});
     //console.log(sendToServer);
 
-    const response = await fetch('http://localhost:5000/connect', {
+    const response = await fetch('/connect', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: sendToServer //pure string

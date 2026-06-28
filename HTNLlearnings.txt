@@ -1,0 +1,62 @@
+what i did:
+harder with hidden blocks and unhiding blocks
+
+problems:
+1. multiple functions of show page, remove page
+2. no forward backward button working
+
+NEW STEP GAMERS:
+implementing hide and unhide classes to divs cant impleemtnn forward or backward pages in the browser
+cant do back and forward in browser
+
+for that  i need to implemetn a URL based routing mechanism that is (SPA Single Page Application)
+
+FOR ROUTING 
+theres 2 approaches it seems
+1. HASH based routing like (microps.com/#/login)  (easier for vanilla js)
+2. History API (needing server side) but is accurate without hasing (harder) -----------------> needs to implement configure all traffic from backend to index.html
+
+to implement:
+1. create a JS ds or object to do, (/login to loginID of html);
+
+see i have two options
+1. window.location.pathname can get the current url from browser and i can get it and change (Hashing)
+problem: but this reloads the page
+
+2. TRUE SPA (load server matching) History API 
+uses navigate priperly like (reacts id pathname stuff)
+
+
+.innerHTML destroys and recreates
+
+event delegation: 
+------------> 1. attached event listener from the parent, delegages (passed) to the children too
+------------> 2, event listners can be seen data-route as /signup and with route = e.target.data.route get /signup
+
+1. doing spa like react one single central index.html and with id and injecting different html files
+3. instead of onclick on each button evetn delegate to one central and do this (data-route="/signup")
+
+ohh rmeember with SPA if using innerHTML it automatically destroys old htmla nd builds new soo bam
+
+problems:
+1. used require commonjs instead of module exports
+2. didnt put .js file extension as in browser gotta be specific
+3. and mainly since I NEED A INITIAL LOADER GOTTA PUT render inside index.html once
+
+if i export variables or anything as NAMED variables or NAMED functions
+i gotta put curly braces around them when importing 
+
+
+            When JavaScript reads this attribute via the dataset property, it strips the "data-" prefix and leaves you with dataset.route. However, in your main.js click event listener, you are checking for dataset.routes (plural, with an "s"). These need to match exactly for the click to trigger the navigation.
+
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+FINAL BOSS THE REFRESH PROBLEM IN SPA:
+1. when i click back or forward, my browser just changes the url format
+but doesnt actually make a (network request) since no req it changes url sure
+but when clicking reload it actually fetches (networked) request and when it sees 
+/login CRASH---------->  why cuz we only have index.html page
+MORAL OF STORY--> refresh is the problem of actual sending network requests
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+BEST workaround if SERVER Is there: 
+1. since The industry-standard way to fix this is to have your backend server serve your frontend files. In your Express backend, you create a "catch-all" route (usually using a wildcard like * as the path). You configure this route so that if the server receives a request for a path it doesn't recognize (like /login), it just sends back your index.html file. Once index.html loads in the browser, your main.js instantly runs, reads the /login URL, and renders the correct screen.

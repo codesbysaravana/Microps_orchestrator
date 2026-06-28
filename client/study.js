@@ -52,3 +52,52 @@ counter();
 let counter2 = outer(); //new init new counter new closure 
 counter2();
 counter2();
+
+
+
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// STALE HIDDEN AND UNHIDING LOGIC -----------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+const showSignupPage = () => {
+    document.getElementById('landing').classList.add('hidden');
+    const loginFormHide = document.getElementById('landingLogin');
+    loginFormHide.classList.add("hidden");
+
+    const landingSignUp = document.getElementById('landingSignUp');
+    landingSignUp.classList.remove("hidden");
+}
+
+const showLoginPage = () => {
+    document.getElementById('landing').classList.add('hidden');
+    const loginFormShow = document.getElementById('landingLogin');
+    loginFormShow.classList.remove("hidden");
+
+    const landingSignUp = document.getElementById('landingSignUp');
+    landingSignUp.classList.add("hidden");
+}
+
+const hideAll = () => {
+    const landingSignUp = document.getElementById('landingSignUp');
+    landingSignUp.classList.add("hidden");
+
+    const loginFormHide = document.getElementById('landingLogin');
+    loginFormHide.classList.add("hidden");
+}
+
+function showDashboard() {
+    //e.preventDefault();
+    const divForBuild = document.querySelectorAll(".buildContainer");
+    //divForBuild.classList.remove('hidden');
+    divForBuild.forEach(div => {
+        div.classList.remove("hidden");
+    });
+}

@@ -1,9 +1,9 @@
 const { ECSClient, RegisterTaskDefinitionCommand, UpdateServiceCommand, CreateServiceCommand, DescribeServicesCommand } = require("@aws-sdk/client-ecs");
 const { ElasticLoadBalancingV2Client,
-        CreateTargetGroupCommand,
-        CreateRuleCommand,
-        DescribeRulesCommand
-    } = require("@aws-sdk/client-elastic-load-balancing-v2");
+    CreateTargetGroupCommand,
+    CreateRuleCommand,
+    DescribeRulesCommand
+} = require("@aws-sdk/client-elastic-load-balancing-v2");
 
 require('dotenv').config();
 
@@ -22,10 +22,10 @@ const BASE_DOMAIN = process.env.BASE_DOMAIN || "microps.com" //base my domain
 
 //NETWORK ALLOTMENT VPC AND SUBNETS STAGE --> DOMAIN
 //Helper --> Finds the next available Priority number for ALB Rules
-async function getNextRulePriority () { //gives high priority
-    const response  = await elbClient.send(new DescribeRulesCommand({ ListenerArn: LISTENER_ALB_ARN })); //gives priorities as number strings
+async function getNextRulePriority() { //gives high priority
+    const response = await elbClient.send(new DescribeRulesCommand({ ListenerArn: LISTENER_ALB_ARN })); //gives priorities as number strings
     const priorities = response.Rules.map(r => r.Priority).filter(p => p != 'default').map(Number);
-                        //picks only "1"                    //filter not default        //converts string to number
+    //picks only "1"                    //filter not default        //converts string to number
     return priorities.length > 0 ? Math.max(...priorities) + 1 : 1;                                     //spread operator spreads it as 1,2,3 and without array[]
 } //returns the next highest priority if 3? return 4 or if nothing then 1 priority
 
@@ -35,7 +35,7 @@ const deployServiceECS = async (userId, projectName, imageURI) => {
     // 32-character limit for Target Group names in AWS
     const shortProject = projectName.substring(0, 10);
     const targetGroupName = `tg-u${userId}-${shortProject}-${Date.now().toString().slice(-6)}`;
-    
+
     const familyName = `tenant-${userId}-${projectName}-task`;
     const serviceName = `tenant-${userId}-${projectName}-service`;
     const tenantDomain = `tenant-${userId}-${projectName}.${BASE_DOMAIN}`;
@@ -152,7 +152,7 @@ const deployServiceECS = async (userId, projectName, imageURI) => {
                             ],
                             assignPublicIp: "ENABLED"
                         }
-                    }, 
+                    },
                     loadBalancers: [
                         {
                             targetGroupArn: targetGroupArn,
@@ -182,7 +182,7 @@ const deployServiceECS = async (userId, projectName, imageURI) => {
 
         return true;
 
-    } catch(err) {
+    } catch (err) {
         console.log("ERROR: FAILED");
         console.log(err);
     }
