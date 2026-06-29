@@ -26,12 +26,12 @@ const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectNa
 
     const preflightObj = await runPreflightAnalysis(repoUrl, projectName); //returns object
 
-    builderBus.emit('build-progress', {
+    buildBus.emit('build-progress', {
         userId: userId,
         message: preflightObj.report
     });
 
-    if (!preflight.success) { //if any blockers found then false
+    if (!preflightObj.success) { //if any blockers found then false
         buildBus.emit('build-progress', {
             userId: userId,
             message: '❌ Pre-Flight Blockers detected. Deployment halted to save build minutes.'

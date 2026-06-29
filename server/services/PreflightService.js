@@ -21,6 +21,7 @@ async function runPreflightAnalysis(repoUrl, projectName) {
     let framework = "Node.js (Generic)";
     let detectedPort = 3000;
     const blockers = [];
+    const warnings = [];
     const requiredEnvVars = new Set(["PORT"]); //why??
 
     const USER_REPO = `https://api.github.com/repos/${owner}/${repo}/contents`;
@@ -115,9 +116,8 @@ async function runPreflightAnalysis(repoUrl, projectName) {
         framework,
         requiredEnvVars: Array.from(requiredEnvVars)
     };
-
 }
 
-runPreflightAnalysis("https://github.com/codesbysaravana/portfolio", "portfolio");
+//runPreflightAnalysis("https://github.com/codesbysaravana/portfolio", "portfolio");
 
 module.exports = { runPreflightAnalysis };
