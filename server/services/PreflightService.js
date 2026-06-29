@@ -63,7 +63,7 @@ async function runPreflightAnalysis(repoUrl, projectName) {
             }
 
             //inspecting ports needed
-            const scriptStr = JSON.stringify(pkg.scripts || {}); //gets only "script" from package.json
+            const scriptsStr = JSON.stringify(pkg.scripts || {}); //gets only "script" from package.json
             if (scriptsStr.includes("8080")) { //microps all routes every  thing to 3000 (gotta change this)
                 detectedPort = 8080;
                 warnings.push("Detected Port 8080 in scripts. MicrOps ALB auto-routes to Port 3000 by default.");
