@@ -4,7 +4,7 @@ const { runBuildPipeline } = require('../providers/GithubActionsProvider');
 const { projectsDB } = require('../repository/projectRepository');
 const { deployServiceECS } = require('./DeployService');
 const { redisConnection } = require('../db/redis');
-const { runPreflightAnalysis } = require('../services/PreflightService');
+const { runPreflightAnalysis } = require('../preflight/PreflightEngine');
 
 const { buildBus } = require('../utils/eventBus');
 

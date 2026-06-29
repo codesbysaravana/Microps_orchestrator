@@ -35,3 +35,12 @@ This is the kind of feature that explains itself in a 10-second demo.
 2. Click Deploy.
 3. Watch Microps instantly analyze the application, detect potential deployment issues, estimate infrastructure costs, and only then begin provisioning.
 4. That single interaction makes it obvious that Microps isn't just deploying applications. It's reasoning about deployments before they happen.
+
+
+Realised i just did for nodejs alone run time and i need to do it for other services, other backend rnutimes as well
+so decouplinng with "GOLDILOCKS" knowledge with 3 spearations
+
+with SOLID principles
+1. Scanner.js (the fetcher from github about package.json preoperly)
+2. Detectors.js (detects by looping thru the response object from Scanner and finds runtimes and framweowkrs);
+3. PreflightAnalyssi.js (main orchestrator file to do all the events by)
