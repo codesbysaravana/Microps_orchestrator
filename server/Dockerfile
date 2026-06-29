@@ -6,10 +6,10 @@ FROM node:20-bookworm-slim AS deps
 WORKDIR /usr/src/app
 
 # Copy package manifests
-COPY package.json package-lock.json ./
+COPY package.json package-lock.jso* ./
 
 # Cleanly install production dependencies
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # ================================================  
 # Stage 2: Production Runner
