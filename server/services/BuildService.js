@@ -1,8 +1,9 @@
 const { Queue, Worker } = require('bullmq');
-const Redis = require('ioredis');
-const { runBuildPipeline } = require('../providers/JenkinsProvider');
+//const { runBuildPipeline } = require('../providers/JenkinsProvider');
+const { runBuildPipeline } = require('../providers/GithubActionsProvider');
 const { projectsDB } = require('../repository/projectRepository');
 const { deployServiceECS } = require('./DeployService');
+const { redisConnection } = require('../db/redis');
 
 const { buildBus } = require('../utils/eventBus');
 
@@ -11,18 +12,15 @@ require('dotenv').config();
 const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2';
 const ECR_REGISTRY_URL = process.env.ECR_REGISTRY_URL || '688567265418.dkr.ecr.ap-southeast-2.amazonaws.com';
 
-//redis needs hostname, port and retry count (unlike pg)
-const redisConnection = new Redis({
-    host: process.env.REDIS_HOST || "54.252.243.208",
-    port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379,
-    maxRetriesPerRequest: null,
-});
-
 // Initializing the Job Queue with Redis
 const buildQueue = new Queue('tenant-builds', { connection: redisConnection });
 
 const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectName) => {
     console.log(`[API] Received deployment request for ${projectName}`);
+
+    buildBus.emit('build-progress', { //this the data inside listener
+        message: '<------ Starting Build Stage ------>'
+    });
 
     const language = 'javascript';
     const framework = 'nodejs';
@@ -44,7 +42,7 @@ const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectNa
         jobId: uniqueJobId
     });
 
-    buildBus.emit('build-progress', {
+    buildBus.emit('build-progress', { //this the data inside listener
         jobId: job.id,
         message: '<------ Building Docker Image ------>'
     });
@@ -60,7 +58,7 @@ const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectNa
     });
 };
 
-//Dynamic Script Genrator (jenkins for now)
+//Dynamic Script Genrator (jenkins/GithubActions for now)
 function sanitizeCommand(cmd) {
     // Basic sanitization: strip out characters that could be used for shell injection (; | & $ > < ` \n)
     // Allow alphanumeric, spaces, dashes, dots, equals, and basic slashes.
@@ -136,7 +134,7 @@ const buildWorker = new Worker('tenant-builds', async (job) => {
             jobId: jobId,
             message: '<------ Build running started by the worker------>'
         });
-        const finalStatus = await runBuildPipeline(tenantScript);
+        const finalStatus = await runBuildPipeline(tenantScript, jobId);
 
 
         if (finalStatus.result === 'SUCCESS') {
@@ -153,7 +151,7 @@ const buildWorker = new Worker('tenant-builds', async (job) => {
 
             return finalStatus;
         } else {
-            throw new Error(`Jenkins Build Failed with status: ${finalStatus.result}`);
+            throw new Error(`Cloud Container Build Failed with status: ${finalStatus.result}`);
         }
 
     } catch (error) {
@@ -173,3 +171,4 @@ userId = 42
 projectName = todo-api
 uniqueJobId = 8f3d12 
 */
+

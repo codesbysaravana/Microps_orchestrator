@@ -1,0 +1,78 @@
+1. created GithubActionsRunner.js make it cleaner and run the code
+2. And in the .env file fully with the required in js file 
+3. create a private repository in microps-runner-vault properly make it private repository
+    create a file in it as (.github/workflows/builder.yml) and paste the below
+
+                        name: MicrOps Tenant Builder
+
+                    on:
+                      workflow_dispatch:
+                        inputs:
+                          tenantScript:
+                            description: 'Generated Bash Script from MicrOps'
+                            required: true
+
+                    jobs:
+                      execute-build:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - name: Configure AWS Credentials
+                            uses: aws-actions/configure-aws-credentials@v4
+                            with:
+                              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                              aws-region: ap-southeast-2
+
+                          - name: Execute Tenant Build Script
+                            run: |
+                              eval "${{ github.event.inputs.tenantScript }}"
+
+
+4. created a classic  token stored
+5. the actions file needs aws creds so i gotta give it by
+Go to your repo codesbysaravana/microps-runner-vault on GitHub.com.
+Go to Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions.
+Click New repository secret and create two secrets:
+Name: AWS_ACCESS_KEY_ID | Value: (Your AWS IAM Access Key)
+Name: AWS_SECRET_ACCESS_KEY | Value: (Your AWS IAM Secret Key)
+
+6. finally the main providerjs file has the normal polling, build exec stuff proeprly
+
+
+BUILD FAILED ??
+got to this https://github.com/codesbysaravana/microps-runner-vault/actions
+and check the run failed and what logs to see
+
+first failure
+1. it happnned failed cuz, the runner tried to get the code (package.json from its own repo) ((my private runner))
+instead of the cloned user code (cuz failure in bash script ig)
+
+was a prblem with github runner yml with runner trying to acess workdir before creating it eval problem
+so fixed---------------------->
+                name: MicrOps Tenant Builder
+
+                on:
+                  workflow_dispatch:
+                    inputs:
+                      tenantScript:
+                        description: 'Generated Bash Script from MicrOps'
+                        required: true
+
+                jobs:
+                  execute-build:
+                    runs-on: ubuntu-latest
+                    steps:
+                      - name: Configure AWS Credentials
+                        uses: aws-actions/configure-aws-credentials@v4
+                        with:
+                          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                          aws-region: ap-southeast-2
+
+                      - name: Execute Tenant Build Script
+                        run: |
+                          cat << 'EOF' > run_build.sh
+                          ${{ github.event.inputs.tenantScript }}
+                          EOF
+                          chmod +x run_build.sh
+                          ./run_build.sh

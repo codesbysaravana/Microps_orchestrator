@@ -1,4 +1,4 @@
-const pool = require('../db/pg');
+const { pool } = require('../db/pg');
 
 //store projects
 async function projectsDB(userId, repoUrl, branch, language, framework, installCommand, buildCommand, projectName) {

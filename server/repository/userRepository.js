@@ -1,4 +1,4 @@
-const pool = require('../db/pg');
+const { pool } = require('../db/pg');
 
 async function createUser(name, email, hashedpassword) {
     try {

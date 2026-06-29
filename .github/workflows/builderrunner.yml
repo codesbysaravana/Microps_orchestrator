@@ -1,0 +1,44 @@
+name: Deploy MicrOps Server to EC2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/**' # Only trigger when backend files change
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "--- 🚀 Starting Blazing Fast Deployment ---"
+            
+            # 1. Clone repo if not exists, otherwise pull latest code
+            if [ ! -d "/home/ubuntu/microps" ]; then
+              git clone https://github.com/codesbysaravana/Microps_orchestrator /home/ubuntu/microps
+            fi
+            cd /home/ubuntu/microps && git pull origin main
+            
+            # 2. Build backend Docker container
+            cd server
+            docker build -t microps-backend:latest .
+            
+            # 3. Stop old running container cleanly
+            docker stop microps-api || true
+            docker rm microps-api || true
+            
+            # 4. Launch new production container with host network & env variables
+            docker run -d \
+              --name microps-api \
+              --restart always \
+              --net=host \
+              --env-file /home/ubuntu/.env \
+              microps-backend:latest
+              
+            echo "--- ✅ Deployment Complete! API running on port 5000 ---"

@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 # Cleanly install production dependencies
 RUN npm ci --omit=dev
 
-# ================================================
+# ================================================  
 # Stage 2: Production Runner
 # ================================================
 FROM node:20-bookworm-slim AS runner

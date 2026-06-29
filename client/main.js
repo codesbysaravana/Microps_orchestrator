@@ -6,6 +6,7 @@ const app = document.getElementById("app");
 window.addEventListener("popstate", () => {
     app.innerHTML = routes[window.location.pathname];
 });
+
 //navigate using history API
 function renderSPA(path) {
     history.pushState({}, "", path);
@@ -137,7 +138,8 @@ const buildRequest = async (e) => {
         const projectName = document.getElementById("projectName").value;
 
         const data = JSON.stringify({ repoUrl, branch, buildCommand, projectName });
-
+        renderSPA("/dashboard/logs"); //just push new route thats all
+        buildLogs();
         const response = await fetch(`${SERVER}/build`, {
             method: 'POST',
             headers: {
@@ -168,6 +170,29 @@ const buildRequest = async (e) => {
     if(!res.ok) { console.log('error'); }
     else { console.log('successfully sent'); }
 } */
+
+const buildLogs = () => {
+    const logBox = document.getElementById('buildLogs');
+    if (!logBox) return;
+    logBox.textContent = "Connecting to Live Stream..."; //textContent for pre
+    //for SSE
+    const eventSource = new EventSource(`${SERVER}/build/stream`); //fetch with event source
+
+    eventSource.onmessage = (event) => { //get from backend
+        const data = JSON.parse(event.data);
+        logBox.textContent += `\n${data.message}`;
+        logBox.scrollTop = logBox.scrollHeight;
+
+        if (data.message.includes('Successful') || data.message.includes('Failed')) {
+            eventSource.close();
+        }
+    }
+
+    eventSource.onerror = () => {
+        console.log("Stream closed or errored.");
+        eventSource.close();
+    };
+}
 
 const sendModel = async (e) => {
     e.preventDefault();

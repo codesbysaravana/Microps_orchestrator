@@ -42,3 +42,5 @@ Browser receives live update
 
 SSE for forntend pushing
 EventEmitter for internal backend communication
+
+NO res.end in SSE (remmeber yes?) good

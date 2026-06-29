@@ -5,6 +5,7 @@ import { dashboard } from "./dashboard.js";
 import { buildStageDeploy } from "./buildToDeploy.js";
 import { deploy } from "./deploy.js";
 import { aiChat } from "./chat.js";
+import { loggingPage } from "./logging.js";
 
 export const routes = {
     // Standard routes
@@ -15,6 +16,7 @@ export const routes = {
     "/dashboard/build": buildStageDeploy,
     "/dashboard/deploy": deploy,
     "/dashboard/chat": aiChat,
+    "/dashboard/logs": loggingPage,
 
     // Fallback routes for VS Code Live Server default path
     "/client/index.html": landing,
@@ -23,7 +25,8 @@ export const routes = {
     "/client/index.html/dashboard": dashboard,
     "/client/index.html/dashboard/build": buildStageDeploy,
     "/client/index.html/dashboard/deploy": deploy,
-    "/client/index.html/dashboard/chat": aiChat
+    "/client/index.html/dashboard/chat": aiChat,
+    "/client/index.html/dashboard/logs": loggingPage
 };
 
 // Since this is a JS object use routes[path] ---> resolves to routes["/login"]

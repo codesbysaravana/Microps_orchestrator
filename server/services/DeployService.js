@@ -7,7 +7,7 @@ const { ElasticLoadBalancingV2Client,
 
 require('dotenv').config();
 
-const buildBus = require('../utils/eventBus');
+const { buildBus } = require('../utils/eventBus');
 
 //create clients constructors
 const ecsClient = new ECSClient({ region: process.env.AWS_REGION });

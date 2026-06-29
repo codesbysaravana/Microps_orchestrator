@@ -272,3 +272,10 @@ Problems:
   1. ECS (Taskk def sg)
   2. ALB (Check security groups)
   3. EC2 (check security groups)
+
+
+
+
+
+
+  BOUGHT THE GODDADDY MICROPS.IN

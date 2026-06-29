@@ -44,7 +44,11 @@ const handleBuildandDeploy = (req, res) => {
 const handleBuildStream = (req, res) => { //listen for evetns and push to browser
     try {
         const listener = (data) => {
-            res.write(`data: ${JSON.stringify(data)}\n\n`);
+            const payload = {
+                ...data,
+                message: data.message ? `${data.message}\n` : data.message
+            };
+            res.write(`data: ${JSON.stringify(payload)}\n\n`);
         }
 
         buildBus.on('build-progress', listener);
@@ -58,7 +62,7 @@ const handleBuildStream = (req, res) => { //listen for evetns and push to browse
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
             'Access-Control-Allow-Origin': '*'
-        });
+        });  //see nooo res.end mate! only when browser closes it ends
     } catch (err) {
         console.log(err);
         res.writeHead(500, {
