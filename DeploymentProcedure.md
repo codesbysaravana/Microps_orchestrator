@@ -20,4 +20,11 @@ so securing it properly
 
 steps
 1. so i ssh'd into ec2 ran the commnads
-2. but my ubuntu user didnt have docker permission so i needed to enable docker permission by creating a docker group and adding my user to that group
+2. but my ubuntu user didnt have docker permission so i needed to enable docker permission by creating a docker group and adding my user to that group 
+
+adding the secrets to repository EC2 host and usernmae and pem key
+
+
+MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST 
+here make it as such
+create a /home/ubuntu/.env on the EC2 server and paste your production database URLs, AWS keys, and GITHUB_PAT.
