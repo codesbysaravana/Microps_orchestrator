@@ -4,6 +4,7 @@ const { runBuildPipeline } = require('../providers/GithubActionsProvider');
 const { projectsDB } = require('../repository/projectRepository');
 const { deployServiceECS } = require('./DeployService');
 const { redisConnection } = require('../db/redis');
+const { runPreflightAnalysis } = require('../services/PreflightService');
 
 const { buildBus } = require('../utils/eventBus');
 
@@ -18,12 +19,32 @@ const buildQueue = new Queue('tenant-builds', { connection: redisConnection });
 const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectName) => {
     console.log(`[API] Received deployment request for ${projectName}`);
 
+    buildBus.emit('build-progress', {
+        userId: userId,
+        message: '<------ Running Pre-Flight Intelligence Scanner ------>'
+    });
+
+    const preflightObj = await runPreflightAnalysis(repoUrl, projectName); //returns object
+
+    builderBus.emit('build-progress', {
+        userId: userId,
+        message: preflightObj.report
+    });
+
+    if (!preflight.success) { //if any blockers found then false
+        buildBus.emit('build-progress', {
+            userId: userId,
+            message: '❌ Pre-Flight Blockers detected. Deployment halted to save build minutes.'
+        });
+        return { status: "Halted", reason: "Pre-flight failed" };
+    }
+
     buildBus.emit('build-progress', { //this the data inside listener
         message: '<------ Starting Build Stage ------>'
     });
 
     const language = 'javascript';
-    const framework = 'nodejs';
+    const framework = preflightObj.framework;
     const installCommand = 'npm install';
 
     // Save initial state to DB before doing any heavy lifting

@@ -1,5 +1,5 @@
 //const SERVER = "http://localhost:5000";
-const SERVER = "http://54.66.192.244:5000";
+const SERVER = "http://54.252.65.254:5000";
 
 import { routes } from './router.js';
 
