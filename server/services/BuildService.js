@@ -120,7 +120,7 @@ cd ..
 rm -rf $WORKSPACE_DIR
 echo "Build & Push completed successfully!"
 `;
-}
+} //remember im using hardcoded ECR registry url
 
 //MAIN bullmq orchestration 
 const buildWorker = new Worker('tenant-builds', async (job) => {
