@@ -27,4 +27,4 @@ adding the secrets to repository EC2 host and usernmae and pem key
 
 MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST MUST 
 here make it as such
-create a /home/ubuntu/.env on the EC2 server and paste your production database URLs, AWS keys, and GITHUB_PAT.
+create a /home/ubuntu/.env on the EC2 server and paste your production database URLs, AWS keys, and GITHUB_PAT..
