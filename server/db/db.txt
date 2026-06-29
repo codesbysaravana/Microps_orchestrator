@@ -55,3 +55,8 @@ CREATE TABLE builds ( each row inside pipelnes
         REFERENCES pipelines(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE deploy (
+    id SERIAL PRIMARY_KEY,
+    
+)

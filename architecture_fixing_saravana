@@ -1,0 +1,2 @@
+1. fixed and decoupled all queries from pool db.js
+2. SRP (SOLID) decoupling the gigantic server.js

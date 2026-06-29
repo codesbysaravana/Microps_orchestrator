@@ -1,0 +1,16 @@
+1. create {QUEUE, WORKER} from bullmq 
+
+2. get REDIS connection from ioredis
+
+3. create a redis connection with hostname, port and maxRetries
+
+4. create a new ---> const bullQueue = new Queue({ redis: redisConnection });
+
+//create a job in bullmq with and assign to a job  (adding to job queue)
+5. add to queue with ---> const job = await bullQueue.add({
+    userId,
+    ...projectDetails
+})
+
+
+6. 

@@ -158,3 +158,5 @@ WHATS A CNAME???
 1. doing the DNS part fully free using Dynu.com
 2. add the CNAME as a widcare (subdomains) to the dynu domain (alb link) DNS name copy
 3. remove tthe current A pointing to root and add the microps-tenant-alb-1577541156.ap-southeast-2.elb.amazonaws.com
+
+

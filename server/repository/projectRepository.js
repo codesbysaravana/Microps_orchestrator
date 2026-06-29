@@ -1,3 +1,5 @@
+const pool = require('../db/pg');
+
 //store projects
 async function projectsDB(userId, repoUrl, branch, language, framework, installCommand, buildCommand, projectName) {
     const date = new Date();

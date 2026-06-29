@@ -12,7 +12,7 @@ const pool = new Pool({
 
 module.exports = { pool }
 
-async function queryDatabase() {
+/* async function queryDatabase() {
   try {
     const res = await pool.query('SELECT NOW()');
     //console.log('Current Time:', res.rows[0]);
@@ -21,6 +21,4 @@ async function queryDatabase() {
   } finally {
     await pool.end();
   }
-}
-
-module.exports = { createUser, fetchUser, projectsDB };
+} */

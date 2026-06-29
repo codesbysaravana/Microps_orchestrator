@@ -7,6 +7,8 @@ const { ElasticLoadBalancingV2Client,
 
 require('dotenv').config();
 
+const buildBus = require('../utils/eventBus');
+
 //create clients constructors
 const ecsClient = new ECSClient({ region: process.env.AWS_REGION });
 const elbClient = new ElasticLoadBalancingV2Client({ region: process.env.AWS_REGION });
@@ -43,6 +45,11 @@ const deployServiceECS = async (userId, projectName, imageURI) => {
     try {
         console.log(`Step:1 ---> Started The Deployment to ECS Fargate with project: ${projectName}`);
         console.log(`Using Image ECR as ${imageURI}`);
+
+        buildBus.emit('build-progress', {
+            userId: userId,
+            message: 'ECR pushed and ECS DEPLOYMENT STARTED'
+        })
 
         const registerResponse = await ecsClient.send(
             new RegisterTaskDefinitionCommand({

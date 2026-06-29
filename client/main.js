@@ -3,7 +3,9 @@ const SERVER = 'http://localhost:5000';
 import { routes } from './router.js';
 
 const app = document.getElementById("app");
-
+window.addEventListener("popstate", () => {
+    app.innerHTML = routes[window.location.pathname];
+});
 //navigate using history API
 function renderSPA(path) {
     history.pushState({}, "", path);
@@ -16,9 +18,7 @@ function renderSPA(path) {
 
 function attachEvents() {
     // Handle browser back/forward buttons
-    window.addEventListener("popstate", () => {
-        app.innerHTML = routes[window.location.pathname];
-    });
+
 
     //adding listeners once when page loads
     app.addEventListener("click", (e) => {

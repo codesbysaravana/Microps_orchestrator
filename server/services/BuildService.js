@@ -1,27 +1,27 @@
 const { Queue, Worker } = require('bullmq');
 const Redis = require('ioredis');
-const { getCrumb } = require('../utils/getJenkinsCrumb');
+const { runBuildPipeline } = require('../providers/JenkinsProvider');
 const { projectsDB } = require('../repository/projectRepository');
 const { deployServiceECS } = require('./DeployService');
 
-require('dotenv').config();
+const { buildBus } = require('../utils/eventBus');
 
-const JENKINS_URL = process.env.JENKINS_URL || 'http://localhost:8080';
-const JENKINS_WORKER_JOB = 'MicrOps-Worker'; // The single generic concurrent job
+require('dotenv').config();
 
 const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2';
 const ECR_REGISTRY_URL = process.env.ECR_REGISTRY_URL || '688567265418.dkr.ecr.ap-southeast-2.amazonaws.com';
 
+//redis needs hostname, port and retry count (unlike pg)
 const redisConnection = new Redis({
     host: process.env.REDIS_HOST || "54.252.243.208",
     port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379,
     maxRetriesPerRequest: null,
 });
 
-// 2. Initialize the Job Queue
+// Initializing the Job Queue with Redis
 const buildQueue = new Queue('tenant-builds', { connection: redisConnection });
 
-const jenkinsInit = async (userId, repoUrl, branch, buildCommand, projectName) => {
+const buildInitializer = async (userId, repoUrl, branch, buildCommand, projectName) => {
     console.log(`[API] Received deployment request for ${projectName}`);
 
     const language = 'javascript';
@@ -34,7 +34,7 @@ const jenkinsInit = async (userId, repoUrl, branch, buildCommand, projectName) =
 
     const uniqueJobId = `build-${Date.now()}`;
 
-    // Throw the job into the Redis Queue (BullMQ)
+    // create and Throwing of the job into the Redis Queue (BullMQ)
     const job = await buildQueue.add('execute-build', {
         userId,
         repoUrl,
@@ -42,6 +42,11 @@ const jenkinsInit = async (userId, repoUrl, branch, buildCommand, projectName) =
         buildCommand,
         projectName,
         jobId: uniqueJobId
+    });
+
+    buildBus.emit('build-progress', {
+        jobId: job.id,
+        message: '<------ Building Docker Image ------>'
     });
 
     console.log(`[API] Job added to queue! Queue ID: ${job.id}`);
@@ -55,12 +60,7 @@ const jenkinsInit = async (userId, repoUrl, branch, buildCommand, projectName) =
     });
 };
 
-/**
- * ------------------------------------------------------------------
- * DYNAMIC SCRIPT GENERATOR
- * Node dictates exact terminal commands for Jenkins to run.
- * ------------------------------------------------------------------
- */
+//Dynamic Script Genrator (jenkins for now)
 function sanitizeCommand(cmd) {
     // Basic sanitization: strip out characters that could be used for shell injection (; | & $ > < ` \n)
     // Allow alphanumeric, spaces, dashes, dots, equals, and basic slashes.
@@ -131,24 +131,24 @@ const buildWorker = new Worker('tenant-builds', async (job) => {
     console.log(`\n[WORKER] Starting background processing for Job ID: ${jobId}`);
 
     try {
-        const { crumb, cookie } = await getCrumb();
-
         const tenantScript = generateTenantScript(repoUrl, branch, buildCommand, projectName, jobId, userId);
+        buildBus.emit('build-progress', {
+            jobId: jobId,
+            message: '<------ Build running started by the worker------>'
+        });
+        const finalStatus = await runBuildPipeline(tenantScript);
 
-        const queueUrl = await triggerJenkinsWorker(tenantScript, crumb, cookie);
-
-        if (!queueUrl) throw new Error("Failed to queue job in Jenkins");
-
-        console.log(`[WORKER] Waiting for Jenkins to assign build node...`);
-        const executable = await pollQueue(queueUrl, crumb, cookie);
-
-        console.log(`[WORKER] Jenkins assigned Build #${executable.number}. Monitoring execution...`);
-        const finalStatus = await pollBuild(executable.url, crumb, cookie);
 
         if (finalStatus.result === 'SUCCESS') {
-            console.log(`[WORKER] ✅ Build successful for ${projectName}!`);
+            console.log(`[WORKER] Build successful for ${projectName}!`);
+
+            buildBus.emit('build-progress', {
+                jobId: jobId,
+                message: '<------ Build Successful by the worker------>'
+            });
 
             const imageURI = `${ECR_REGISTRY_URL}/microps-hq:tenant-${userId}-${projectName}-${jobId}`;
+
             await deployServiceECS(userId, projectName, imageURI);
 
             return finalStatus;
@@ -163,83 +163,7 @@ const buildWorker = new Worker('tenant-builds', async (job) => {
 }, { connection: redisConnection });
 
 
-//jenkins API login
-const getAuthHeader = () => {
-    const username = process.env.JENKINS_API_USER;
-    const token = process.env.JENKINS_API_KEY;
-    return Buffer.from(`${username}:${token}`).toString('base64');
-};
-
-//first script to run on jenkins
-async function triggerJenkinsWorker(tenantScript, crumb, cookie) {
-    const params = new URLSearchParams();
-    params.append('TENANT_SCRIPT', tenantScript);
-
-    const res = await fetch(`${JENKINS_URL}/job/${JENKINS_WORKER_JOB}/buildWithParameters`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Basic ${getAuthHeader()}`,
-            [crumb.crumbRequestField]: crumb.crumb,
-            'Cookie': cookie,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
-    });
-
-    if (res.status !== 201) {
-        console.error("Jenkins rejected trigger:", res.status, await res.text());
-        return null;
-    }
-
-    return res.headers.get("location");
-}
-
-async function pollQueue(queueUrl, crumb, cookie) {
-    while (true) {
-        const res = await fetch(`${queueUrl}api/json`, {
-            headers: {
-                'Authorization': `Basic ${getAuthHeader()}`,
-                [crumb.crumbRequestField]: crumb.crumb,
-                'Cookie': cookie
-            }
-        });
-        const data = await res.json();
-
-        if (data.executable) {
-            return data.executable;
-        }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-}
-
-async function pollBuild(buildUrl, crumb, cookie) {
-    while (true) {
-        const res = await fetch(`${buildUrl}api/json`, {
-            headers: {
-                "Authorization": `Basic ${getAuthHeader()}`,
-                [crumb.crumbRequestField]: crumb.crumb,
-                "Cookie": cookie
-            }
-        });
-        const build = await res.json();
-
-        if (!build.building) {
-            return {
-                buildNumber: build.number,
-                result: build.result,
-                duration: build.duration,
-                url: build.url
-            };
-        }
-        await new Promise(resolve => setTimeout(resolve, 3000));
-    }
-}
-
-module.exports = { jenkinsInit };
-
-
-
-
+module.exports = { buildInitializer };
 
 /* 
 What imageURI becomes
